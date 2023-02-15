@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-
+import { LeanDocument, Types } from 'mongoose';
 @Schema({
   timestamps: true,
 })
@@ -15,3 +15,7 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+export type UserDocument = LeanDocument<User> & {
+  _id: Types.ObjectId;
+};
