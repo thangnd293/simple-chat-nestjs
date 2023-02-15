@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, ProjectionType } from 'mongoose';
 import { tryCatchWrapper } from 'utils';
-import { User } from './schema/user.schema';
+import { User, UserDocument } from './schema/user.schema';
 
 @Injectable()
 export class UserService {
@@ -16,4 +16,8 @@ export class UserService {
       return user;
     },
   );
+
+  getMe = tryCatchWrapper(async (user: Omit<UserDocument, 'password'>) => {
+    return user;
+  });
 }
