@@ -10,7 +10,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @UsePipes(new JoiValidationPipe(LoginDtoSchema))
-  login(@Request() req) {
-    return this.authService.login(req.user);
+  async login(@Request() req) {
+    return await this.authService.login(req.user);
   }
 }
