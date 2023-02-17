@@ -1,23 +1,28 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Message } from 'modules/message/schema/message.schema';
-import { User } from 'modules/user/schema/user.schema';
+import { UserDocument } from 'modules/user/schema/user.schema';
 import mongoose, { LeanDocument, Types } from 'mongoose';
-import { UserLastSeen } from './user-last-seen.schema';
+import { LastActive, LastActiveSchema } from './lastActive.schema';
 
 @Schema({ timestamps: true })
 export class Conversation {
   @Prop({
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   })
-  members: [User];
+  members: [UserDocument];
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Message' })
   lastMessage: Message;
 
   @Prop({
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'UserLastSeen' }],
+    type: [LastActiveSchema],
   })
-  UserLastSeen: UserLastSeen;
+  lastSeen: LastActive[];
+
+  @Prop({
+    type: [LastActiveSchema],
+  })
+  lastReceived: LastActive[];
 }
 
 export const ConversationSchema = SchemaFactory.createForClass(Conversation);

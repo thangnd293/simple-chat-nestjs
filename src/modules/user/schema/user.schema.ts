@@ -15,6 +15,11 @@ export class User {
 
   @Prop()
   lastOnline: Date;
+
+  @Prop({
+    default: false,
+  })
+  isOnline: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

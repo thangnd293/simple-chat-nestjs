@@ -45,6 +45,10 @@ export class Store {
   public delete(key: string) {
     this.store.delete(key);
   }
+
+  public getAll(): Map<string, Set<string>> {
+    return this.store;
+  }
 }
 
 const test = new Set(['1', '2', '3']);

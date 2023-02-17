@@ -19,7 +19,7 @@ export class ConversationController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  @UsePipes(new JoiValidationPipe(CreateConversationSchema))
+  // @UsePipes(new JoiValidationPipe(CreateConversationSchema))
   @Post()
   async create(@Body() body) {
     return await this.conversationService.create(body);
@@ -40,7 +40,11 @@ export class ConversationController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/messages')
-  async getMessages(@Param('id') id: string) {
-    return await this.conversationService.getMessagesByConversationId(id);
+  async getMessages(@Param('id') id: string, @Request() req) {
+    const { _id } = req.user;
+    return await this.conversationService.getMessagesByConversationId(
+      id,
+      _id.toString(),
+    );
   }
 }

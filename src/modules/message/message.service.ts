@@ -3,7 +3,7 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { tryCatchWrapper } from 'utils';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types, UpdateQuery } from 'mongoose';
 import { Message } from './schema/message.schema';
 
 @Injectable()
@@ -24,4 +24,10 @@ export class MessageService {
 
     return messageSent;
   });
+
+  findAndUpdate = tryCatchWrapper(
+    async (id: string, update: UpdateQuery<Message>) => {
+      return this.messageModel.findByIdAndUpdate(id, update).lean();
+    },
+  );
 }
