@@ -16,6 +16,7 @@ export class MessageService {
 
   create = tryCatchWrapper(async (createMessageDto: CreateMessageDto) => {
     const { conversation } = createMessageDto;
+
     const messageSent = await new this.messageModel(createMessageDto).save();
     await this.conversationModel.findByIdAndUpdate(conversation, {
       lastMessage: messageSent._id,

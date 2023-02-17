@@ -15,5 +15,6 @@ import { Message } from 'modules/message/schema/message.schema';
   ],
   controllers: [ConversationController],
   providers: [ConversationService],
+  exports: [ConversationService],
 })
 export class ConversationModule {}

@@ -23,12 +23,6 @@ export class Message {
   })
   sender: User;
 
-  @Prop({
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-  })
-  receiver: User;
-
   @Prop()
   isDeleted: boolean;
 

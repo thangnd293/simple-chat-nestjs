@@ -13,8 +13,6 @@ export class WsGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
-    console.log('vao guard');
-
     try {
       const { token } = context.getArgs()[0].handshake.auth;
       const { id } = jwt.verify(token, secret) as Payload;

@@ -5,7 +5,8 @@ import { EventsGateway } from './events.gateway';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConfig } from 'configs';
 import { UserModule } from 'modules/user/user.module';
-
+import { ConversationModule } from 'modules/conversation/conversation.module';
+import { MessageModule } from 'modules/message/message.module';
 const { secret, expiresIn } = jwtConfig;
 
 @Module({
@@ -16,6 +17,8 @@ const { secret, expiresIn } = jwtConfig;
       signOptions: { expiresIn },
     }),
     UserModule,
+    ConversationModule,
+    MessageModule,
   ],
   providers: [EventsGateway, JwtStrategy],
 })

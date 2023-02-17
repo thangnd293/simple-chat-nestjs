@@ -21,7 +21,7 @@ export class ConversationService {
   );
 
   getById = tryCatchWrapper(async (id: string) => {
-    return await this.conversationModel.findById(new Types.ObjectId(id));
+    return await this.conversationModel.findById(new Types.ObjectId(id)).lean();
   });
 
   getAllByUserId = tryCatchWrapper(async (userId: string) => {
@@ -59,6 +59,10 @@ export class ConversationService {
     async (conversationId: string) => {
       return await this.messageModel
         .find({ conversation: conversationId })
+        .populate({
+          path: 'sender',
+          select: '_id name',
+        })
         .lean();
     },
   );
