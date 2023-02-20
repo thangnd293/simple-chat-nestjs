@@ -1,5 +1,3 @@
-import { ConversationService } from './conversation.service';
-import { CreateConversationSchema } from './dto/create-conversation.dto';
 import {
   Body,
   Controller,
@@ -12,6 +10,8 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'guards/jwt-auth.guard';
 import { JoiValidationPipe } from 'pipes/joi-validate.pipe';
+import { ConversationService } from './conversation.service';
+import { CreateConversationSchema } from './dto/create-conversation.dto';
 
 @Controller('conversations')
 export class ConversationController {
@@ -19,7 +19,7 @@ export class ConversationController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  // @UsePipes(new JoiValidationPipe(CreateConversationSchema))
+  @UsePipes(new JoiValidationPipe(CreateConversationSchema))
   @Post()
   async create(@Body() body) {
     return await this.conversationService.create(body);

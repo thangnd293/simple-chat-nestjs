@@ -1,5 +1,4 @@
-import { UserService } from 'modules/user/user.service';
-import { UnauthorizedException, UseGuards, UsePipes } from '@nestjs/common';
+import { UnauthorizedException, UseGuards } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -7,19 +6,17 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-  WsException,
 } from '@nestjs/websockets';
 import { OnGatewayDisconnect } from '@nestjs/websockets/interfaces';
-import { WsGuard } from 'guards/ws-auth.guard';
-import { Server, Socket } from 'socket.io';
-import { Store } from 'store';
-import * as jwt from 'jsonwebtoken';
 import { jwtConfig } from 'configs';
-import { Payload } from 'types/jwt';
+import { WsGuard } from 'guards/ws-auth.guard';
+import * as jwt from 'jsonwebtoken';
 import { ConversationService } from 'modules/conversation/conversation.service';
 import { MessageService } from 'modules/message/message.service';
-import { CreateMessageDtoSchema } from 'modules/message/dto/create-message.dto';
-import { JoiWsValidationPipe } from 'pipes/joi-wsValidate.pipe';
+import { UserService } from 'modules/user/user.service';
+import { Server, Socket } from 'socket.io';
+import { Store } from 'store';
+import { Payload } from 'types/jwt';
 
 const { secret } = jwtConfig;
 const store = Store.getStore();
@@ -82,19 +79,12 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const receiver = conversation.members.find(
       (member) => member.toString() !== sender.toString(),
     );
-    const senders = store.get(sender.toString());
 
+    const senders = store.get(sender.toString());
     const receivers = store.get(receiver._id.toString());
 
     if (receivers)
-      this.server
-        .to(Array.from(receivers))
-        .emit('new-message', data, async () => {
-          await this.conversationService.updateLastReceived(
-            conversationId,
-            receiver._id,
-          );
-        });
+      this.server.to(Array.from(receivers)).emit('new-message', data);
 
     if (senders) this.server.to(Array.from(senders)).emit('new-message', data);
 
@@ -104,29 +94,11 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @UseGuards(WsGuard)
   @SubscribeMessage('read-message')
   async onReadMessage(@ConnectedSocket() client: Socket, @MessageBody() data) {
-    console.log('data', data);
+    const { conversationId } = data;
+    const { user } = client.data;
+    console.log('read', user._id);
 
-    // const { user } = client.data;
-    // const { conversationId } = data;
-    // const [conversation] = await Promise.all([
-    //   await this.conversationService.getById(conversationId),
-    //   await this.conversationService.updateLastReceived(
-    //     conversationId,
-    //     user._id.toString(),
-    //   ),
-    // ]);
-    // if (!conversation) return;
-
-    // const receiver = conversation.members.find(
-    //   (member) => member.toString() !== user._id.toString(),
-    // );
-
-    // const receivers = store.get(receiver._id.toString());
-    // console.log('receivers', receivers);
-
-    // if (receivers)
-    //   this.server.to(Array.from(receivers)).emit('read-message', data);
-    // return true;
+    await this.conversationService.updateLastSeen(conversationId, user._id);
   }
 }
 

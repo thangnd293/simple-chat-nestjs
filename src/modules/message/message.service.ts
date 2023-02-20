@@ -1,9 +1,9 @@
-import { Conversation } from 'modules/conversation/schema/conversation.schema';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { tryCatchWrapper } from 'utils';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types, UpdateQuery } from 'mongoose';
+import { Conversation } from 'modules/conversation/schema/conversation.schema';
+import { Model, UpdateQuery } from 'mongoose';
+import { tryCatchWrapper } from 'utils';
+import { CreateMessageDto } from './dto/create-message.dto';
 import { Message } from './schema/message.schema';
 
 @Injectable()

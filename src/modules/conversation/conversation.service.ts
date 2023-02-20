@@ -1,13 +1,13 @@
-import { CreateConversationDto } from './dto/create-conversation.dto';
-import { tryCatchWrapper } from 'utils';
-import { Conversation } from './schema/conversation.schema';
-import { Injectable, Request } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types, UpdateQuery } from 'mongoose';
 import {
   Message,
   MessageDocument,
 } from 'modules/message/schema/message.schema';
+import { Model, Types } from 'mongoose';
+import { tryCatchWrapper } from 'utils';
+import { CreateConversationDto } from './dto/create-conversation.dto';
+import { Conversation } from './schema/conversation.schema';
 
 @Injectable()
 export class ConversationService {
@@ -19,8 +19,6 @@ export class ConversationService {
 
   create = tryCatchWrapper(
     async (createConversationDto: CreateConversationDto) => {
-      console.log('createConversationDto', createConversationDto);
-
       return await new this.conversationModel(createConversationDto).save();
     },
   );
@@ -70,8 +68,6 @@ export class ConversationService {
         })
         .lean();
 
-      console.log('conversation', conversation);
-
       if (!conversation) throw new Error('Conversation not found');
 
       const receiver = conversation.members.find(
@@ -86,11 +82,34 @@ export class ConversationService {
         })
         .lean();
 
+      const lastSeen = conversation.lastSeen.find(
+        (action) => action.user.toString() === receiver._id.toString(),
+      );
+
       const messages = data.map((message) => {
-        if (message.sender._id.toString() === sender) {
+        if (
+          message.sender._id.toString() === sender &&
+          lastSeen.time.getTime() >= message.createdAt.getTime()
+        ) {
           return {
             ...message,
-            status: receiver.isOnline ? 'received' : message.status,
+            status: 'seen',
+          };
+        }
+
+        if (
+          message.sender._id.toString() === sender &&
+          message.status === 'sent'
+        ) {
+          console.log('vao');
+
+          const isReceived =
+            receiver.isOnline ||
+            message.createdAt.getTime() <= receiver.lastOnline.getTime();
+
+          return {
+            ...message,
+            status: isReceived ? 'received' : message.status,
           };
         }
         return message;
@@ -99,28 +118,31 @@ export class ConversationService {
     },
   );
 
-  updateLastReceived = tryCatchWrapper(
-    async (conversationId: Types.ObjectId, receiverId: Types.ObjectId) => {
-      const conversation = await this.conversationModel
-        .findById(conversationId)
-        .exec();
-
-      const lastReceivedFiltered = conversation.lastReceived.filter(
-        (active) => active.user.toString() !== receiverId.toString(),
+  updateLastSeen = tryCatchWrapper(
+    async (conversationId: Types.ObjectId, userSeenId: Types.ObjectId) => {
+      const updatedConversation = await this.conversationModel.findOneAndUpdate(
+        {
+          _id: conversationId,
+          'lastSeen.user': userSeenId,
+        },
+        {
+          $set: {
+            'lastSeen.$.time': new Date(),
+          },
+        },
+        {
+          new: true,
+        },
       );
 
-      const newTimestamp = {
-        user: receiverId,
-        time: new Date(),
-      };
+      if (!updatedConversation) {
+        await this.conversationModel.updateOne(
+          { _id: conversationId },
+          { $push: { lastSeen: { user: userSeenId, time: new Date() } } },
+        );
+      }
 
-      const conversationUpdated = (conversation.lastReceived = [
-        ...lastReceivedFiltered,
-        newTimestamp,
-      ]);
-      await conversation.save();
-
-      return conversationUpdated;
+      return updatedConversation;
     },
   );
 }
