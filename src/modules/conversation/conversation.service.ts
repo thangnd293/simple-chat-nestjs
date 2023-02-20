@@ -82,14 +82,27 @@ export class ConversationService {
         })
         .lean();
 
-      const lastSeen = conversation.lastSeen.find(
+      const lastReceiverSeen = conversation.lastSeen.find(
         (action) => action.user.toString() === receiver._id.toString(),
+      );
+
+      const lastSenderSeen = conversation.lastSeen.find(
+        (action) => action.user.toString() !== receiver._id.toString(),
       );
 
       const messages = data.map((message) => {
         if (
+          message.sender._id.toString() !== sender &&
+          message.createdAt.getTime() <= lastSenderSeen.time.getTime()
+        )
+          return {
+            ...message,
+            status: 'seen',
+          };
+
+        if (
           message.sender._id.toString() === sender &&
-          lastSeen.time.getTime() >= message.createdAt.getTime()
+          lastReceiverSeen.time.getTime() >= message.createdAt.getTime()
         ) {
           return {
             ...message,
@@ -97,22 +110,14 @@ export class ConversationService {
           };
         }
 
-        if (
-          message.sender._id.toString() === sender &&
-          message.status === 'sent'
-        ) {
-          console.log('vao');
+        const isReceived =
+          receiver.isOnline ||
+          message.createdAt.getTime() <= receiver.lastOnline.getTime();
 
-          const isReceived =
-            receiver.isOnline ||
-            message.createdAt.getTime() <= receiver.lastOnline.getTime();
-
-          return {
-            ...message,
-            status: isReceived ? 'received' : message.status,
-          };
-        }
-        return message;
+        return {
+          ...message,
+          status: isReceived ? 'received' : message.status,
+        };
       });
       return messages;
     },

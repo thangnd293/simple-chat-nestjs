@@ -83,10 +83,10 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const senders = store.get(sender.toString());
     const receivers = store.get(receiver._id.toString());
 
-    if (receivers)
-      this.server.to(Array.from(receivers)).emit('new-message', data);
-
-    if (senders) this.server.to(Array.from(senders)).emit('new-message', data);
+    this.server
+      .to(Array.from(receivers || []))
+      .to(Array.from(senders || []))
+      .emit('new-message', data);
 
     return messageCreated;
   }
@@ -96,9 +96,20 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async onReadMessage(@ConnectedSocket() client: Socket, @MessageBody() data) {
     const { conversationId } = data;
     const { user } = client.data;
-    console.log('read', user._id);
 
-    await this.conversationService.updateLastSeen(conversationId, user._id);
+    const conversation = await this.conversationService.updateLastSeen(
+      conversationId,
+      user._id,
+    );
+    const sender = user._id;
+    const receiver = conversation.members.find(
+      (member) => member.toString() !== sender.toString(),
+    );
+
+    const receivers = store.get(receiver._id.toString());
+
+    if (receivers)
+      this.server.to(Array.from(receivers)).emit('new-message', data);
   }
 }
 
