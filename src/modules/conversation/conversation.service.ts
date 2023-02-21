@@ -102,7 +102,7 @@ export class ConversationService {
 
         if (
           message.sender._id.toString() === sender &&
-          lastReceiverSeen.time.getTime() >= message.createdAt.getTime()
+          message.createdAt.getTime() <= lastReceiverSeen.time.getTime()
         ) {
           return {
             ...message,
@@ -119,6 +119,7 @@ export class ConversationService {
           status: isReceived ? 'received' : message.status,
         };
       });
+
       return messages;
     },
   );

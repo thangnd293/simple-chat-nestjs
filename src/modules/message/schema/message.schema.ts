@@ -1,6 +1,6 @@
-import { Prop, SchemaFactory, Schema } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Conversation } from 'modules/conversation/schema/conversation.schema';
-import { User, UserDocument } from 'modules/user/schema/user.schema';
+import { UserDocument } from 'modules/user/schema/user.schema';
 import mongoose, { LeanDocument, Types } from 'mongoose';
 import { Timestamp } from 'types/common';
 

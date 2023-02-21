@@ -40,6 +40,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const id = getUserIdFromToken(token);
 
     store.set(id, socket.id);
+    socket.join(id);
     this.userService.updateOnline(id, true);
   }
 
@@ -47,7 +48,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const { token } = socket.handshake.auth;
     const id = getUserIdFromToken(token);
 
-    store.set(id, socket.id);
+    socket.leave(id);
     store.remove(socket.id);
     const notExist = store.get(id);
 
@@ -80,12 +81,9 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       (member) => member.toString() !== sender.toString(),
     );
 
-    const senders = store.get(sender.toString());
-    const receivers = store.get(receiver._id.toString());
-
     this.server
-      .to(Array.from(receivers || []))
-      .to(Array.from(senders || []))
+      .to(sender.toString())
+      .to(receiver._id.toString())
       .emit('new-message', data);
 
     return messageCreated;
@@ -106,10 +104,10 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       (member) => member.toString() !== sender.toString(),
     );
 
-    const receivers = store.get(receiver._id.toString());
-
-    if (receivers)
-      this.server.to(Array.from(receivers)).emit('new-message', data);
+    this.server
+      .to(sender.toString())
+      .to(receiver._id.toString())
+      .emit('new-message', data);
   }
 }
 
